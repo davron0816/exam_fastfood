@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tezkor Fast Food</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/swiper@9/swiper-bundle.min.css" />
+    
+    <style>
+        body.dark-mode { background-color: #1f2937; color: #f3f4f6; }
+        body.dark-mode .bg-white { background-color: #374151; }
+        body.dark-mode .bg-gray-100 { background-color: #111827; }
+        body.dark-mode .text-gray-600 { color: #d1d5db; }
+        .cart-count {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 1.5rem; height: 1.5rem; background-color: #ef4444;
+            color: white; border-radius: 9999px; font-size: 0.75rem;
+        }
+        .menu-card, .swiper-slide { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .menu-card:hover, .swiper-slide:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2); }
+        #cartModal, #savedOrdersModal, #deliveryModal, #paymentModal {
+            animation: fadeIn 0.3s ease;
+        }
+        #cartModal.hidden, #savedOrdersModal.hidden, #deliveryModal.hidden, #paymentModal.hidden {
+            animation: fadeOut 0.3s ease reverse;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+        #map { height: 300px; border-radius: 8px; }
+        .swiper { width: 100%; max-width: 1200px; margin: 0 auto; }
+        .swiper-slide {
+            background-size: cover; background-position: center;
+            height: 400px; display: flex; align-items: center; justify-content: center;
+            text-align: center; border-radius: 8px;
+        }
+        .swiper-button-next, .swiper-button-prev { color: #fff; }
+        body.dark-mode .swiper-button-next, body.dark-mode .swiper-button-prev { color: #f3f4f6; }
+        .gradient-btn { background: linear-gradient(to right, #ef4444, #f97316); }
+        body.dark-mode .gradient-btn { background: linear-gradient(to right, #3b82f6, #10b981); }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans transition-colors duration-300">
+    <!-- Navbar -->
+    <nav class="bg-red-600 text-white absolute z-50 p-4 sticky top-0 shadow-md flex">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold" data-i18n="siteTitle">Tezkor Fast Food</h1>
+            <div class="flex items-center space-x-4">
+                <a href="#home" class="hover:underline" data-i18n="navHome">Home</a>
+                <a href="#menu" class="hover:underline" data-i18n="navMenu">Menu</a>
+                <a href="#contact" class="hover:underline" data-i18n="navContact">Contact</a>
+                <select id="languageSelect" class="p-2 bg-red-700 rounded text-white">
+                    <option value="en">English</option>
+                    <option value="uz">O‘zbek</option>
+                    <option value="ru">Русский</option>
+                </select>
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-red-700">
+                    <svg id="themeIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </button>
+                <div class="relative">
+                    <button onclick="toggleCart()" class="flex items-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span id="cartCount" class="cart-count ml-1 hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Slider Section -->
+    <section id="home" class="py-8">
+        <div class="swiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" style="background-image: url('https://assets-us-01.kc-usercontent.com/4353bced-f940-00d0-8c6e-13a0a4a7f5c2/2ac60829-5178-4a6e-80cf-6ca43d862cee/Quick-and-Easy-Pepperoni-Pizza-700x700.jpeg?w=1280&auto=format')">
+                    <div class="bg-black bg-opacity-50 p-6 rounded-lg">
+                        <h2 class="text-3xl font-bold text-white" data-i18n="slider1Title">Pepperoni Pizza</h2>
+                        <p class="text-white" data-i18n="slider1Text">Only 99.000som! Order now!</p>
+                        <a href="#menu" class="mt-4 inline-block bg-red-600 px-6 py-2 rounded-full text-white hover:bg-red-700 gradient-btn" data-i18n="sliderOrder">Order Now</a>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="background-image: url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')">
+                    <div class="bg-black bg-opacity-50 p-6 rounded-lg">
+                        <h2 class="text-3xl font-bold text-white" data-i18n="slider2Title">Cheeseburger Delight</h2>
+                        <p class="text-white" data-i18n="slider2Text">Just $8.99! Grab yours!</p>
+                        <a href="#menu" class="mt-4 inline-block bg-red-600 px-6 py-2 rounded-full text-white hover:bg-red-700 gradient-btn" data-i18n="sliderOrder">Order Now</a>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="background-image: url('https://s0.rbk.ru/v6_top_pics/media/img/4/92/347034914676924.jpeg')">
+                    <div class="bg-black bg-opacity-50 p-6 rounded-lg">
+                        <h2 class="text-3xl font-bold text-white" data-i18n="slider3Title">Refreshing Cola</h2>
+                        <p class="text-white" data-i18n="slider3Text">Only $2.99!</p>
+                        <a href="#menu" class="mt-4 inline-block bg-red-600 px-6 py-2 rounded-full text-white hover:bg-red-700 gradient-btn" data-i18n="sliderOrder">Order Now</a>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="container mx-auto py-12">
+        <h2 class="text-3xl font-bold text-center mb-8" data-i18n="menuTitle">Our Menu</h2>
+        <div class="flex flex-wrap justify-center mb-6 space-x-2">
+            <button onclick="filterMenu('all')" class="px-4 py-2 m-1 bg-gray-200 rounded hover:bg-gray-300" data-i18n="filterAll">All</button>
+            <button onclick="filterMenu('pizza')" class="px-4 py-2 m-1 bg-gray-200 rounded hover:bg-gray-300" data-i18n="filterPizza">Pizza</button>
+            <button onclick="filterMenu('burger')" class="px-4 py-2 m-1 bg-gray-200 rounded hover:bg-gray-300" data-i18n="filterBurger">Burger</button>
+            <button onclick="filterMenu('lavash')" class="px-4 py-2 m-1 bg-gray-200 rounded hover:bg-gray-300" data-i18n="filterLavash">Lavash</button>
+            <button onclick="filterMenu('drink')" class="px-4 py-2 m-1 bg-gray-200 rounded hover:bg-gray-300" data-i18n="filterDrink">Drink</button>
+            <button onclick="filterMenu('dessert')" class="px-4 py-2 m-1 bg-gray-200 rounded hover:bg-gray-300" data-i18n="filterDessert">Dessert</button>
+            <button onclick="filterMenu('twister')" class="px-4 py-2 m-1 bg-gray-200 rounded hover:bg-gray-300" data-i18n="filterTwister">Twister</button>
+            <select id="priceFilter" onchange="filterByPrice()" class="px-4 py-2 m-1 bg-gray-200 rounded">
+                <option value="all" data-i18n="priceAll">All Prices</option>
+                <option value="low" data-i18n="priceLow">Under $10</option>
+                <option value="high" data-i18n="priceHigh">Over $10</option>
+            </select>
+        </div>
+        <div id="menuItems" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-4" data-i18n="contactTitle">Contact Us</h2>
+            <p class="mb-4" data-i18n="contactPhone">Phone: +998 95 772 70 37</p>
+            <p class="mb-4" data-i18n="contactEmail">Email: info@fastfooddelight.uz</p>
+            <div id="map" class="mx-auto max-w-3xl"></div>
+        </div>
+    </section>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4" data-i18n="cartTitle">Your Cart</h3>
+            <p id="cartEmptyMessage" class="text-red-500 text-sm hidden" data-i18n="cartEmpty">Your cart is empty!</p>
+            <ul id="cartItems" class="space-y-2 mb-4"></ul>
+            <p id="cartTotal" class="font-bold" data-i18n="cartTotal">Total: $0</p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="saveOrder()" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 gradient-btn" data-i18n="saveOrder">Save Order</button>
+                <button onclick="toggleCart()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" data-i18n="close">Close</button>
+                <button onclick="showDeliveryForm()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 gradient-btn" data-i18n="checkout">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Modal -->
+    <div id="deliveryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4" data-i18n="deliveryTitle">Delivery Details</h3>
+            <form id="deliveryForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700" data-i18n="deliveryName">Full Name</label>
+                    <input type="text" id="name" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700" data-i18n="deliveryPhone">Phone</label>
+                    <input type="tel" id="phone" class="w-full p-2 border rounded" pattern="\+[0-9]{12}" placeholder="+998901234567" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700" data-i18n="deliveryAddress">Address</label>
+                    <input type="text" id="address" class="w-full p-2 border rounded" required>
+                    <p id="deliveryFeeDisplay" class="text-gray-600 mt-1"></p>
+                </div>
+                <div>
+                    <label class="block text-gray-700" data-i18n="deliveryTime">Delivery Time</label>
+                    <select id="deliveryTime" class="w-full p-2 border rounded" required>
+                        <option value="asap" data-i18n="timeAsap">As soon as possible</option>
+                        <option value="30min" data-i18n="time30min">In 30 minutes</option>
+                        <option value="1hour" data-i18n="time1hour">In 1 hour</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="toggleDelivery()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 gradient-btn" data-i18n="proceedToPayment">Proceed to Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4" data-i18n="paymentTitle">Payment</h3>
+            <form id="paymentForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700" data-i18n="cardNumber">Card Number</label>
+                    <input type="text" id="cardNumber" class="w-full p-2 border rounded" required maxlength="16" placeholder="1234 5678 9012 3456">
+                    <p id="cardNumberError" class="text-red-500 text-sm hidden"></p>
+                </div>
+                <div class="flex space-x-2">
+                    <div class="w-1/2">
+                        <label class="block text-gray-700" data-i18n="expiryDate">Expiry Date</label>
+                        <input type="text" id="expiryDate" class="w-full p-2 border rounded" required placeholder="MM/YY">
+                        <p id="expiryDateError" class="text-red-500 text-sm hidden"></p>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-gray-700" data-i18n="cvv">CVV</label>
+                        <input type="text" id="cvv" class="w-full p-2 border rounded" required maxlength="4" placeholder="123">
+                        <p id="cvvError" class="text-red-500 text-sm hidden"></p>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="togglePayment()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 gradient-btn" data-i18n="payNow">Pay Now</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Saved Orders Modal -->
+    <div id="savedOrdersModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4" data-i18n="savedOrdersTitle">Saved Orders</h3>
+            <ul id="savedOrdersList" class="space-y-2 mb-4"></ul>
+            <div class="flex justify-end">
+                <button onclick="toggleSavedOrders()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/swiper@9/swiper-bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

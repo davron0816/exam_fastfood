@@ -1,0 +1,64 @@
+/* Oddiy rejim uchun */
+body {
+    background-color: #f3f4f6; /* Tailwind bg-gray-100 */
+    color: #4b5563; /* Tailwind text-gray-600 */
+    transition: all 0.3s ease;
+}
+
+/* Dark mode uchun */
+body.dark-mode {
+    background-color: #1f2937; /* Tailwind bg-gray-800 */
+    color: #f3f4f6; /* Tailwind text-gray-100 */
+}
+
+/* Tailwind sinflarini dark mode uchun qayta belgilash */
+body.dark-mode .bg-white {
+    background-color: #374151; /* Tailwind bg-gray-700 */
+}
+body.dark-mode .bg-gray-100 {
+    background-color: #111827; /* Tailwind bg-gray-900 */
+}
+body.dark-mode .text-gray-600 {
+    color: #d1d5db; /* Tailwind text-gray-300 */
+}
+body.dark-mode .text-gray-700 {
+    color: #d1d5db; /* Tailwind text-gray-300 */
+}
+body.dark-mode .bg-gray-200 {
+    background-color: #4b5563; /* Tailwind bg-gray-600 */
+}
+body.dark-mode .bg-gray-300 {
+    background-color: #6b7280; /* Tailwind bg-gray-500 */
+}
+body.dark-mode .bg-red-600 {
+    background-color: #3b82f6; 
+}
+body.dark-mode .hover\:bg-gray-300:hover {
+    background-color: #6b7280; 
+}
+body.dark-mode .hover\:bg-gray-400:hover {
+    background-color: #4b5563;
+}
+body.dark-mode .hover\:bg-red-700:hover {
+    background-color: #2563eb; 
+}
+
+/* Modal oynalar va boshqa elementlar uchun */
+body.dark-mode #cartModal .bg-white,
+body.dark-mode #deliveryModal .bg-white,
+body.dark-mode #paymentModal .bg-white,
+body.dark-mode #savedOrdersModal .bg-white {
+    background-color: #374151; 
+}
+
+/* Swiper tugmalari va boshqa elementlar */
+body.dark-mode .swiper-button-next,
+body.dark-mode .swiper-button-prev {
+    color: #f3f4f6; 
+}
+body.dark-mode .gradient-btn {
+    background: linear-gradient(to right, #3b82f6, #10b981);
+}
+#cartModal {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
